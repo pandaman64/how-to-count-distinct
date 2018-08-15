@@ -69,7 +69,7 @@ fn main() {
     );
 
     // how to implement?
-    // assert_eq!(count_distinct_labels(&conn), 4);
+    // assert_eq!(count_distinct_labels(&conn), 3);
 
     // thread 'main' panicked at 'assertion failed: `(left == right)`
     //   left: `2`,
