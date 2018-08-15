@@ -1,0 +1,8 @@
+[package]
+name = "how-to-count-distinct"
+version = "0.1.0"
+authors = ["pandaman64 <kointosudesuyo@infoseek.jp>"]
+
+[dependencies]
+diesel = { version = "1.0", features = ["postgres"] }
+dotenv = "0.13"
