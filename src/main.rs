@@ -73,6 +73,6 @@ fn main() {
 
     // thread 'main' panicked at 'assertion failed: `(left == right)`
     //   left: `2`,
-    //   right: `4`', src/main.rs:75:5
-    assert_eq!(count_distinct_labels_not_work(&conn), 4);
+    //   right: `3`', src/main.rs:77:5
+    assert_eq!(count_distinct_labels_not_work(&conn), 3);
 }
