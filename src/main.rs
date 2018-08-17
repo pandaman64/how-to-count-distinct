@@ -4,39 +4,22 @@ extern crate dotenv;
 
 use diesel::pg::PgConnection;
 use diesel::prelude::*;
-use diesel::sql_types::{Array, Text};
 use dotenv::dotenv;
-use std::collections::HashSet;
 use std::env;
 
-mod schema;
+mod schema {
+    table! {
+        t (id) {
+            id -> Int4,
+            labels -> Array<Text>,
+        }
+    }
 
-pub fn establish_connection() -> PgConnection {
-    dotenv().ok();
-
-    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
-}
-
-sql_function!(fn unnest(a: Array<Text>) -> Text);
-
-fn select_distinct_labels(conn: &PgConnection) -> Vec<String> {
-    use schema::t::dsl::*;
-
-    t.select(unnest(labels))
-        .distinct()
-        .get_results::<String>(conn)
-        .unwrap()
-}
-
-fn count_distinct_labels_not_work(conn: &PgConnection) -> i64 {
-    use schema::t::dsl::*;
-
-    t.select(unnest(labels))
-        .distinct()
-        .count()
-        .get_result(conn)
-        .unwrap()
+    #[derive(Insertable)]
+    #[table_name = "t"]
+    pub struct NewRow<'a> {
+        pub labels: &'a [String],
+    }
 }
 
 fn count_distinct_labels(conn: &PgConnection) -> i64 {
@@ -45,11 +28,13 @@ fn count_distinct_labels(conn: &PgConnection) -> i64 {
 }
 
 fn main() {
-    use schema::t::dsl;
+    dotenv().ok();
 
-    let conn = establish_connection();
+    let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let conn = PgConnection::establish(&database_url)
+        .expect(&format!("Error connecting to {}", database_url));
 
-    diesel::insert_into(dsl::t)
+    diesel::insert_into(schema::t::dsl::t)
         .values(&vec![
             schema::NewRow {
                 labels: &["foo".to_string(), "bar".to_string()],
@@ -60,19 +45,6 @@ fn main() {
         ]).execute(&conn)
         .unwrap();
 
-    let mut labels = select_distinct_labels(&conn);
-    labels.sort();
-
-    assert_eq!(
-        labels,
-        ["bar".to_string(), "baz".to_string(), "foo".to_string()]
-    );
-
     // how to implement?
-    // assert_eq!(count_distinct_labels(&conn), 3);
-
-    // thread 'main' panicked at 'assertion failed: `(left == right)`
-    //   left: `2`,
-    //   right: `3`', src/main.rs:77:5
-    assert_eq!(count_distinct_labels_not_work(&conn), 3);
+    assert_eq!(count_distinct_labels(&conn), 3);
 }
